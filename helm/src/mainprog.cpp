@@ -9,19 +9,19 @@ Scalar R = 50, Z = 50;
 
 class MyEqn : public HelmEqn {
   virtual Scalar f(Vec2 p) override final {
+    // return 0;
     if (abs(p.x()) < 2 * R / N && abs(p.y() - 0.5 * Z) < 2 * Z / N) {
-      return +1;
+      return -1;
     } else {
       return 0;
     }
-    // return 0;
   }
 };
 
 class MyDir : public DirichletBC {
   virtual Scalar f(Vec2 p) override final {
     if (abs(p.x()) < 2 * R / N && abs(p.y() - 0.5 * Z) < 2 * Z / N) {
-      return +1;
+      return -1;
     } else {
       return 0;
     }
@@ -39,8 +39,9 @@ int main(int argc, char **argv) {
   // Setup the dirichlet boundaries.
   for (auto id = 0; id < mesh.position_.size(); ++id) {
     auto p = mesh.position_[id];
-    if ((abs(p.x()) < 2 * R / N && abs(p.y() - 0.5 * Z) < 2 * Z / N) ||
-        p.y() < Z / N || p.y() >= Z - Z / N) {
+    if ( // (abs(p.x()) < 2 * R / N && abs(p.y() - 0.5 * Z) < 2 * Z / N) ||
+        p.y() < Z / N  // || p.y() >= Z - Z / N
+    ) {
       dir.vert_ids_.push_back(id);
     }
   }

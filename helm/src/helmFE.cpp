@@ -1,5 +1,6 @@
 #include "helmFE.h"
 #include <Eigen/Eigen>
+#include <Eigen/CholmodSupport>
 #include <iostream>
 
 namespace helm {
@@ -13,8 +14,8 @@ Eigen::Matrix3<Scalar> standard_pdv{}; // TODO: fill the element.
 Eigen::Matrix<Scalar, 2, 3> std_dpdxy{{1, 0, -1}, {0, 1, -1}};
 
 Eigen::Matrix3<Scalar> std_pv{{1.0 / 12.0, 1.0 / 24, 1.0 / 24},
-                            {1.0 / 24, 1.0 / 12, 1.0 / 24},
-                            {1.0 / 24, 1.0 / 24, 1.0 / 12}};
+                              {1.0 / 24, 1.0 / 12, 1.0 / 24},
+                              {1.0 / 24, 1.0 / 24, 1.0 / 12}};
 
 FiniteElement &FiniteElement::setMesh(const Mesh &mesh) {
   mesh_ = mesh;
@@ -29,10 +30,16 @@ void FiniteElement::solve() {
   buildDirichlet();
   stiffness_.resize(mesh_.position_.size(), mesh_.position_.size());
   stiffness_.setFromTriplets(stf_coefs_.begin(), stf_coefs_.end());
-  Eigen::SparseLU<SparseMatrix> solver;
+  std::cerr << "Solve Eq." << std::endl;
+  Eigen::CholmodSimplicialLDLT<SparseMatrix> solver;
   solver.compute(stiffness_);
+  if (solver.info() != Eigen::Success) {
+    std::cerr << "Fail: " << solver.info() << std::endl;
+  }
   values_ = solver.solve(load_);
-  // std::cerr << "Estimate BiCGSTAB Error:" << solver.error() << std::endl;
+  if (solver.info() != Eigen::Success) {
+    std::cerr << "Solve Fail: " << solver.info() << std::endl;
+  }
 }
 
 void FiniteElement::buildStiffness() {
